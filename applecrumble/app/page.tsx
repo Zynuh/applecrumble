@@ -1,68 +1,119 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { ArrowRight, Compass, Route, Sparkles } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
+import { ContinueLearningButton } from "@/components/learning/continue-learning-button";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAllSubjectProgress, getContinueLearning, getLearner } from "@/lib/catalog";
+import { LanguagePriorityControl } from "@/components/i18n/language-priority-control";
+import { useLocale } from "@/components/i18n/locale-provider";
+
+export default function LandingPage() {
+  const { t } = useLocale();
+  const learner = getLearner();
+  const continueTarget = getContinueLearning();
+  const subjects = getAllSubjectProgress();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="landing-theme-surface min-h-full">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+        <Logo />
+        <div className="flex items-center gap-2">
+          <LanguagePriorityControl />
+          <Button nativeButton={false} variant="ghost" size="sm" className="hidden sm:inline-flex" render={<Link href="/dashboard" />}>
+            {t("landing.login")}
+          </Button>
+          <Button nativeButton={false} size="sm" className="rounded-full" render={<Link href="/dashboard" />}>
+            {t("landing.openApp")}
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
+        <section className="grid items-center gap-12 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:py-16">
+          <div>
+            <p className="mb-4 inline-flex items-center rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
+              {t("landing.badge")}
+            </p>
+            <h1 className="max-w-xl text-4xl leading-[1.1] font-medium sm:text-6xl">
+              {t("landing.heading")}
+            </h1>
+            <p className="mt-5 max-w-lg text-lg leading-8 text-muted-foreground">
+              {t("landing.description")}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <ContinueLearningButton />
+              <Button nativeButton={false} variant="outline" size="lg" className="rounded-full" render={<Link href="/subjects" />}>
+                {t("landing.subjects")}
+              </Button>
+            </div>
+            {continueTarget ? (
+              <p className="mt-4 text-sm text-muted-foreground">
+                {t("landing.nextStep", {
+                  name: learner.displayName,
+                  lesson: continueTarget.lesson.title,
+                  subject: continueTarget.subject.name,
+                })}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="rounded-[2rem] border border-border/80 bg-card/80 p-6 shadow-2xl shadow-primary/15">
+            <p className="text-sm font-medium text-muted-foreground">{t("landing.currentLevel")}</p>
+            <p className="mt-2 font-heading text-4xl">{t("common.grade")} {learner.currentGradeEstimate.toFixed(1)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("common.target")}: {learner.targetGrade}</p>
+            <div className="mt-6 space-y-4">
+              {subjects.slice(0, 3).map((summary) => (
+                <div key={summary.subject.slug}>
+                  <div className="mb-1 flex justify-between text-sm">
+                    <span>{summary.subject.name}</span>
+                    <span className="tabular-nums text-muted-foreground">{summary.percent}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${summary.percent}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/dashboard"
+              className="mt-6 inline-flex items-center gap-1 text-sm font-medium"
+            >
+              {t("landing.dashboard")}
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              icon: Compass,
+              title: t("landing.feature1.title"),
+              text: t("landing.feature1.text"),
+            },
+            {
+              icon: Route,
+              title: t("landing.feature2.title"),
+              text: t("landing.feature2.text"),
+            },
+            {
+              icon: Sparkles,
+              title: t("landing.feature3.title"),
+              text: t("landing.feature3.text"),
+            },
+          ].map((item) => (
+            <Card key={item.title} className="bg-card/70 shadow-none">
+              <CardHeader>
+                <item.icon className="mb-2 size-5 text-primary" />
+                <CardTitle>{item.title}</CardTitle>
+                <CardDescription className="leading-6">{item.text}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </section>
       </main>
     </div>
   );
