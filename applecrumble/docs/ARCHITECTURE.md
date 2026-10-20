@@ -1,6 +1,6 @@
 # Crumble – Architekturentscheidungen
 
-Stand: visuelles Grundgerüst ohne Datenbank und ohne KI.
+Stand: visuelles Grundgerüst mit serverseitigem Supabase-Verbindungstest, aber noch ohne Datenbank als Inhaltsquelle und ohne KI.
 
 ## Zielbild
 
@@ -23,6 +23,15 @@ Seiten importieren nur `catalog`, nicht `mock-data` (Ausnahme: `generateStaticPa
 - `/dashboard`, `/subjects`, `/subjects/[slug]`, `/learn/[lessonId]`, `/progress` in der Route Group `(app)` mit gemeinsamer Navigation
 - Dynamische Segmente werden über `generateStaticParams` vorgerendert, passend zu `cacheComponents` in Next.js 16
 - URL-abhängiges Rendern (`params`) liegt in `/learn/[lessonId]` und `/subjects/[slug]` hinter einer Suspense-Grenze, damit Client-Navigation sofort einen Fallback zeigen kann
+- `/api/health/database` prüft die serverseitige PostgreSQL-Verbindung zu Supabase mit `DB_DIRECT_CONNECTION_LINK` und `DB_PASSWORD`. Die Verbindung wird über einen wiederverwendeten `pg`-Pool hergestellt; Secrets werden nicht an den Browser ausgeliefert. Die übrigen Supabase-/CLI-Variablen sind für diese direkte SQL-Verbindung nicht erforderlich.
+
+## Umgebungsvariablen und Doppler
+
+- Lokale Entwicklung mit Doppler starten: `doppler run -- npm run dev`. Doppler stellt die für das Projekt konfigurierte Umgebung dem Next.js-Prozess zur Laufzeit bereit; Secret-Werte gehören weder in den Quellcode noch in `.env.local`.
+- Die Supabase-Verbindungsprüfung benötigt `DB_DIRECT_CONNECTION_LINK` und `DB_PASSWORD`. Der direkte PostgreSQL-Link kann den Benutzernamen und weitere Verbindungsparameter enthalten; das Passwort wird vom Connection-Pool separat eingesetzt.
+- Zusätzlich vorhandene Supabase-Variablen sind `DB_CLI_SETUP`, `DB_PROJECT_LINK` und `DB_PUBLISHABLE_KEY`. Sie werden von der aktuellen direkten PostgreSQL-Verbindung nicht verwendet. Ein Publishable Key ist kein Ersatz für serverseitige Datenbank-Zugangsdaten.
+- Secrets werden nur serverseitig über `process.env` gelesen. Keine geheimen Werte mit `NEXT_PUBLIC_` benennen oder in Client-Komponenten importieren.
+- `GET /api/health/database` ist der Verbindungstest: erfolgreiches Ergebnis `{"status":"connected"}`, bei fehlender Konfiguration oder fehlgeschlagener Verbindung HTTP 503. Der Testendpunkt ist kein Authentifizierungs- oder Datenbankzugriff für die Anwendung.
 
 ## UI-System
 
@@ -34,9 +43,10 @@ Seiten importieren nur `catalog`, nicht `mock-data` (Ausnahme: `generateStaticPa
 - Prozentwerte der Fortschrittsanzeigen verwenden dieselbe aktive Locale auf Server und Client, damit Zahlformatierung und Hydration konsistent bleiben.
 - Die Oberfläche nutzt `lib/i18n.ts` und `components/i18n/locale-provider.tsx` statt einer zusätzlichen i18n-Abhängigkeit. Der aktive Sprachcode wird auch auf `document.documentElement.lang` gesetzt. Demo-Lerninhalte bleiben in ihrer redaktionellen Ausgangssprache und werden nicht automatisch übersetzt.
 
-## Bewusst nicht in diesem Schritt
+## Noch nicht umgesetzt
 
-- Supabase, Auth, OpenAI
+- Supabase als Inhaltsquelle für `catalog.ts` (der Katalog liest weiterhin Beispieldaten)
+- Auth, OpenAI
 - Echte Aufgabenauswertung
 - Persistenter Lernstand
 - Zusätzliche UI-Bibliotheken
